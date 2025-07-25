@@ -2,13 +2,23 @@ import streamlit as st
 import xml.etree.ElementTree as ET
 import pandas as pd
 import zipfile
+import io  # Para gerar arquivo Excel em memória
 
 def relatorio_xml_para_excel():
-    st.subheader("Conversor XML para Excel (NF-e e CT-e)")
+    st.markdown('<h2 style="font-size:28px;">🧾 Conversor XML para Excel</h2>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <p style="font-size:18px;">
+    Este módulo permite importar arquivos XML de <strong>NF-e</strong> e <strong>CT-e</strong> (inclusive compactados em .zip), 
+    extrair os principais campos fiscais e gerar uma planilha Excel com os dados organizados.  
+    Ideal para conferências, cruzamentos e análises fiscais automatizadas.
+    </p>
+    """, unsafe_allow_html=True)
+
     arquivos = st.file_uploader("Faça upload de arquivos XML ou ZIP:", type=["xml", "zip"], accept_multiple_files=True)
 
     campos_nfe = [
-        "Número NF", "Série", "Data", "Emitente", "CNPJ Emitente",
+        "Chave","Número NF", "Série", "Data", "Emitente", "CNPJ Emitente",
         "Destinatário", "CNPJ Destinatário", "UF Destino", "NCM", "CFOP",
         "CST", "Base ICMS", "Alíquota ICMS", "Valor ICMS",
         "Valor Unitário", "Valor Total Item", "Valor Total NF-e"
@@ -94,14 +104,21 @@ def relatorio_xml_para_excel():
             st.warning("Nenhum dado foi encontrado para exportar.")
             return
 
-        with pd.ExcelWriter("xml_convertido.xlsx", engine="xlsxwriter") as writer:
+        # Gerar Excel em memória com BytesIO
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             if not df_nfe.empty:
                 df_nfe.to_excel(writer, sheet_name="NF-e", index=False)
             if not df_cte.empty:
                 df_cte.to_excel(writer, sheet_name="CT-e", index=False)
+        output.seek(0)
 
-        with open("xml_convertido.xlsx", "rb") as f:
-            st.download_button("📥 Baixar Excel", f, file_name="xml_convertido.xlsx")
+        st.download_button(
+            label="📥 Baixar Excel",
+            data=output,
+            file_name="xml_convertido.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 
 def processar_xml(file, dados_nfe, dados_cte, chaves_processadas):
@@ -163,6 +180,7 @@ def processar_xml(file, dados_nfe, dados_cte, chaves_processadas):
                     valor_icms = icms_tipo.findtext("vICMS", "")
 
                 linha = {
+                    "Chave": chave,
                     "Número NF": numero,
                     "Série": serie,
                     "Data": data_emissao,

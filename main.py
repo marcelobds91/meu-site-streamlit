@@ -5,11 +5,9 @@ from importar_sped import importar_sped_para_excel  # CORRETO: importa a funçã
 from relatorios.relatorio_conferencia_xml_txt import relatorio_conferencia_xml_txt
 from relatorios.relatorio_xml_para_excel import relatorio_xml_para_excel
 
-
 st.set_page_config(page_title="Automações Fiscais", layout="centered")
 
-# Ocultar opções de login/cadastro/logout no menu
-menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📊 Relatórios"])  # Removido: "⚙️ Cadastro", "🔓 Login", "🚪 Logout"
+menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📊 Relatórios"])
 
 if menu == "🏠 Início":
     st.title("Bem-vindo ao Projeto Automação Fiscal")
@@ -56,17 +54,16 @@ elif menu == "📂 Importar SPED":
         )
 
 elif menu == "📊 Relatórios":
-    st.title("Relatórios")
-
     relatorio_selecionado = st.selectbox("Selecione o relatório para visualizar:", [
-        "Relatório Tipo Item",
-        "Conferência SPED x XML",
-        "Conversor XML para Excel"
+        "📌 Relatório Tipo Item",
+        "🔍 Conferência SPED x XML",
+        "🧾 Conversor XML para Excel"
     ])
 
-    if relatorio_selecionado == "Relatório Tipo Item":
-        relatorio_tipo_item()
-    elif relatorio_selecionado == "Conferência SPED x XML":
-        relatorio_conferencia_xml_txt()
-    elif relatorio_selecionado == "Conversor XML para Excel":
-        relatorio_xml_para_excel()
+    if relatorio_selecionado:
+        if "Tipo Item" in relatorio_selecionado:
+            relatorio_tipo_item()
+        elif "SPED x XML" in relatorio_selecionado:
+            relatorio_conferencia_xml_txt()
+        elif "Conversor XML" in relatorio_selecionado:
+            relatorio_xml_para_excel()

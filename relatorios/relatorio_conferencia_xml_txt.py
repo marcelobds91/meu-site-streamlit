@@ -8,20 +8,24 @@ def extrair_chave_xml(xml_file):
     try:
         tree = ET.parse(xml_file)
         root = tree.getroot()
-        ns = {'ns': root.tag.split('}')[0].strip('{')}
-        
-        # Tenta identificar se é NF-e ou CT-e
-        if root.tag.endswith("NFe") or root.find(".//ns:infNFe", ns) is not None:
+        ns = {'ns': root.tag.split('}')[0].strip('{')} if '}' in root.tag else {}
+
+        # Tenta achar infNFe (NF-e)
+        infNFe = root.find(".//ns:infNFe", ns) if ns else root.find(".//infNFe")
+        if infNFe is not None:
+            chave = infNFe.attrib.get("Id", "")[-44:]
             tipo = "NF-e"
-            chave = root.find(".//ns:infNFe", ns).attrib.get("Id", "")[-44:]
-        elif root.tag.endswith("CTe") or root.find(".//ns:infCte", ns) is not None:
-            tipo = "CT-e"
-            chave = root.find(".//ns:infCte", ns).attrib.get("Id", "")[-44:]
         else:
-            tipo = "Desconhecido"
-            chave = ""
+            # Tenta achar infCte (CT-e)
+            infCte = root.find(".//ns:infCte", ns) if ns else root.find(".//infCte")
+            if infCte is not None:
+                chave = infCte.attrib.get("Id", "")[-44:]
+                tipo = "CT-e"
+            else:
+                chave = ""
+                tipo = "Desconhecido"
         return {"chave": re.sub(r'\D', '', chave), "tipo": tipo}
-    except Exception as e:
+    except Exception:
         return {"chave": "", "tipo": "Erro"}
 
 def extrair_chaves_txt_sped(conteudo_txt):
@@ -36,18 +40,20 @@ def extrair_chaves_txt_sped(conteudo_txt):
     return chaves
 
 def relatorio_conferencia_xml_txt():
-    st.subheader("Conferência de Chaves NF-e / CT-e entre XML e TXT")
-
+    st.markdown("""
+🔍 **Descrição:**  
+Este módulo realiza a **conferência entre o SPED Fiscal (TXT)** e os **arquivos XML de NF-e e CT-e**, 
+verificando divergências nas **chaves das notas fiscais**.
+""")
     txt_file = st.file_uploader("📄 Carregue o arquivo TXT do SPED Fiscal", type=["txt"])
     xml_files = st.file_uploader("📂 Carregue os arquivos XML de NF-e e CT-e", type=["xml"], accept_multiple_files=True)
 
     if txt_file and xml_files:
-        # Leitura do TXT
+        # Leitura do conteúdo do TXT
         conteudo_txt = txt_file.read().decode("utf-8", errors="ignore")
         chaves_txt = extrair_chaves_txt_sped(conteudo_txt)
         chaves_txt_set = set(chaves_txt)
 
-        # Leitura dos XMLs
         registros_xml = []
         for xml in xml_files:
             info = extrair_chave_xml(xml)
@@ -57,14 +63,13 @@ def relatorio_conferencia_xml_txt():
         df_xml = pd.DataFrame(registros_xml).drop_duplicates()
         chaves_xml_set = set(df_xml["chave"])
 
-        # Diferenças
+        # Diferenças entre chaves
         chaves_somente_no_txt = chaves_txt_set - chaves_xml_set
         chaves_somente_no_xml = chaves_xml_set - chaves_txt_set
 
         df_faltando_no_xml = pd.DataFrame(
             [{"chave": chave, "origem": "SPED TXT", "tipo": "NF-e ou CT-e"} for chave in chaves_somente_no_txt]
         )
-
         df_faltando_no_txt = df_xml[df_xml["chave"].isin(chaves_somente_no_xml)].copy()
         df_faltando_no_txt["origem"] = "XML"
 
@@ -72,17 +77,15 @@ def relatorio_conferencia_xml_txt():
 
         st.success("✅ Comparação realizada com sucesso!")
 
-        # Exibir botão para download
+        # Botão para download do relatório Excel
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
             df_final.to_excel(writer, sheet_name="Divergências", index=False)
+        buffer.seek(0)
+
         st.download_button(
             label="⬇️ Baixar Relatório de Divergências",
-            data=buffer.getvalue(),
+            data=buffer,
             file_name="relatorio_chaves_diferenca.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
-
-
-

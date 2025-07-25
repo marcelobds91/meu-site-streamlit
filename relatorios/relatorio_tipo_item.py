@@ -3,7 +3,19 @@ import io
 import pandas as pd
 
 def relatorio_tipo_item():
-    st.subheader("SPED Balance: Conferência Cruzada C170 x 0200")
+
+    st.markdown("""
+    <h2 style="font-size:28px; margin-bottom: 0;">📌 Relatório Tipo Item</h2>
+""", unsafe_allow_html=True)
+
+    st.markdown("""
+    🧾 **Descrição:**  
+    Este módulo gera um relatório com os **tipos de itens (registro 0200)** vinculados às operações fiscais no SPED Fiscal, 
+    com base nos **CFOPs dos registros C170**.  
+    Permite identificar e alterar a classificação dos itens conforme a natureza da operação (venda, revenda, uso, consumo etc.).
+    """)
+    
+    st.markdown("""---""")
 
     st.markdown("""
     📂 **Arraste e solte seu arquivo TXT do SPED Fiscal aqui**  
@@ -13,6 +25,7 @@ def relatorio_tipo_item():
     """)
 
     uploaded_file = st.file_uploader(label="", type=["txt"])
+
 
     if uploaded_file is not None:
         try:
