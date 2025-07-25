@@ -4,10 +4,12 @@ from relatorios.relatorio_tipo_item import relatorio_tipo_item
 from importar_sped import importar_sped_para_excel  # CORRETO: importa a função do arquivo importar_sped.py
 from relatorios.relatorio_conferencia_xml_txt import relatorio_conferencia_xml_txt
 from relatorios.relatorio_xml_para_excel import relatorio_xml_para_excel
+from excel_para_txt import funcao_excel_para_txt
+
 
 st.set_page_config(page_title="Automações Fiscais", layout="centered")
 
-menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📊 Relatórios"])
+menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📤 Excel para TXT", "📊 Relatórios"])
 
 if menu == "🏠 Início":
     st.title("Bem-vindo ao Projeto Automação Fiscal")
@@ -52,6 +54,11 @@ elif menu == "📂 Importar SPED":
             file_name="sped_convertido.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
+elif menu == "📤 Excel para TXT":
+    funcao_excel_para_txt()
+
+
 
 elif menu == "📊 Relatórios":
     relatorio_selecionado = st.selectbox("Selecione o relatório para visualizar:", [

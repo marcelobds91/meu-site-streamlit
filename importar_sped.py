@@ -3,17 +3,7 @@ import io
 import xlsxwriter
 import streamlit as st  # <-- FALTAVA ESTA LINHA
 
-st.markdown("""
-<h2>📥 Importador SPED Fiscal (TXT)</h2>
-<p>
-Este módulo permite importar o arquivo <strong>SPED Fiscal (TXT)</strong> e extrair os registros
-de forma estruturada em planilhas Excel. Ele identifica os diferentes tipos de registros (como 0000, 0150, C100, C170, etc.)
-e organiza cada um em abas separadas, com os cabeçalhos oficiais de acordo com o <em>Guia Prático EFD ICMS/IPI - Versão 3.1.8</em>.
-</p>
-<p>✅ Ideal para análises fiscais, conferências e uso em BI (Power BI, Excel, etc).</p>
-""", unsafe_allow_html=True)
 
-# Dicionário de cabeçalhos conforme Guia Prático EFD ICMS/IPI v3.1.8 (exemplo)
 dict_cabecalhos = {
     "0000": ["REG", "COD_VER", "COD_FIN", "DT_INI", "DT_FIN", "NOME", "CNPJ", "CPF", "UF", "IE", "COD_MUN", "IM", "SUFRAMA", "IND_PERFIL", "IND_ATIV"],
     "0001": ["REG", "IND_MOV"],
