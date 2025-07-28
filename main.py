@@ -5,11 +5,12 @@ from importar_sped import importar_sped_para_excel  # CORRETO: importa a funçã
 from relatorios.relatorio_conferencia_xml_txt import relatorio_conferencia_xml_txt
 from relatorios.relatorio_xml_para_excel import relatorio_xml_para_excel
 from excel_para_txt import funcao_excel_para_txt
+from downloads_page import area_de_downloads
 
 
 st.set_page_config(page_title="Automações Fiscais", layout="centered")
 
-menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📤 Excel para TXT", "📊 Relatórios"])
+menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📤 Excel para TXT", "📊 Relatórios", "📁 Downloads"])
 
 if menu == "🏠 Início":
     st.title("Bem-vindo ao Projeto Automação Fiscal")
@@ -39,21 +40,38 @@ if menu == "🏠 Início":
     """, unsafe_allow_html=True)
 
 elif menu == "📂 Importar SPED":
-    st.title("Importar SPED Fiscal")
+    st.title("📥 Importador de SPED Fiscal para Excel")
+
+    st.markdown("""
+    🧾 **Descrição:**  
+    Este módulo permite importar um arquivo SPED Fiscal no formato `.txt` e converter automaticamente todos os registros encontrados em abas separadas no Excel.  
+    Você pode escolher entre exportar **somente os registros presentes no arquivo** ou **todos os registros existentes no Guia Prático**, mesmo que estejam ausentes no arquivo.
+
+    - Cada aba corresponde a um tipo de registro (ex: C100, C170, 0200...).
+    - Os dados são organizados com os campos corretos conforme a estrutura oficial.
+    """)
 
     uploaded_file = st.file_uploader("Selecione o arquivo SPED (.txt)", type=["txt"])
-    
+
+    exportar_tudo = st.radio(
+        "O que deseja exportar?",
+        ["🔹 Somente os registros encontrados no arquivo", "🔸 Todos os registros com estrutura completa"],
+        index=1
+    )
+
+    exportar_todos = exportar_tudo == "🔸 Todos os registros com estrutura completa"
+
     if uploaded_file:
-        output = importar_sped_para_excel(uploaded_file)
+        output = importar_sped_para_excel(uploaded_file, exportar_todos)
 
-        st.success("Arquivo processado com sucesso!")
-
+        st.success("✅ Arquivo processado com sucesso!")
         st.download_button(
-            label="📥 Baixar Excel Gerado",
+            label="📤 Baixar Excel Gerado",
             data=output,
             file_name="sped_convertido.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
 
 elif menu == "📤 Excel para TXT":
     funcao_excel_para_txt()
@@ -74,3 +92,6 @@ elif menu == "📊 Relatórios":
             relatorio_conferencia_xml_txt()
         elif "Conversor XML" in relatorio_selecionado:
             relatorio_xml_para_excel()
+
+elif menu == "📁 Downloads":
+    area_de_downloads()

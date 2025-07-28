@@ -25,7 +25,13 @@ dict_cabecalhos = {
     "0500": ["REG", "DT_ALT", "COD_NAT_CC", "IND_CTA", "NIVEL", "COD_CTA", "NOME_CTA"],
     "0600": ["REG", "DT_ALT", "COD_CCUS", "CCUS"],
 
+    "C001": ["REG", "IND_MOV"],
     "C100": ["REG", "IND_OPER", "IND_EMIT", "COD_PART", "COD_MOD", "COD_SIT", "SER", "NUM_DOC", "CHV_NFE", "DT_DOC", "DT_E_S", "VL_DOC", "IND_PGTO", "VL_DESC", "VL_ABAT_NT", "VL_MERC", "IND_FRT", "VL_FRT", "VL_SEG", "VL_OUT_DA", "VL_ICMS", "VL_ICMS_ST", "VL_IPI", "VL_PIS", "VL_COFINS", "VL_PIS_ST", "VL_COFINS_ST"],
+    "C101": ["REG", "VL_FCP_UF_DEST", "VL_ICMS_UF_DEST", "VL_ICMS_UF_REM"],
+    "C105": ["REG", "OPER", "UF"],
+    "C110": ["REG", "COD_INF", "TXT_COMPL"],
+    "C111": ["REG", "NUM_PROC", "IND_PROC"],
+    "C112": ["REG", "COD_DA","UF", "NUM_DA", "COD_AUT", "VL_DA", "DT_VCTO", "DT_PGTO"],
     "C170": ["REG", "NUM_ITEM", "COD_ITEM", "DESCR_COMPL", "QTD", "UNID", "VL_ITEM", "VL_DESC", "IND_MOV", "CST_ICMS", "CFOP", "COD_NAT", "VL_BC_ICMS", "ALIQ_ICMS", "VL_ICMS", "VL_BC_ICMS_ST", "ALIQ_ST", "VL_ICMS_ST", "IND_APUR", "CST_IPI", "COD_ENQ", "VL_BC_IPI", "ALIQ_IPI", "VL_IPI", "CST_PIS", "VL_BC_PIS", "ALIQ_PIS_PERC", "QUANT_BC_PIS", "ALIQ_PIS_REAIS", "VL_PIS", "CST_COFINS", "VL_BC_COFINS", "ALIQ_COFINS_PERC", "QUANT_BC_COFINS", "ALIQ_COFINS_REAIS", "VL_COFINS", "COD_CTA"],
     "C190": ["REG", "CST_ICMS", "CFOP", "ALIQ_ICMS", "VL_OPR", "VL_BC_ICMS", "VL_ICMS", "VL_BC_ICMS_ST", "VL_ICMS_ST", "VL_RED_BC", "COD_OBS"],
 
@@ -72,7 +78,24 @@ dict_cabecalhos = {
     "9990": ["REG", "QTD_LIN_9"],
     "9999": ["REG", "QTD_LIN"]
 }
-def importar_sped_para_excel(uploaded_file):
+
+# Título e upload
+st.title("📥 Importador de SPED Fiscal para Excel")
+uploaded_file = st.file_uploader("Selecione o arquivo SPED (.txt)", type=["txt"])
+
+
+# Opção do tipo de exportação (sempre visível)
+exportar_tudo = st.radio(
+    "O que deseja exportar?",
+    ["🔹 Somente os registros encontrados no arquivo", "🔸 Todos os registros com estrutura completa"],
+    index=1
+)
+
+# ✅ Transformar em booleano (sempre, fora do IF)
+exportar_todos = exportar_tudo == "🔸 Todos os registros com estrutura completa"
+
+# Função principal
+def importar_sped_para_excel(uploaded_file, exportar_todos):
     try:
         linhas = uploaded_file.read().decode('utf-8').splitlines()
     except UnicodeDecodeError:
@@ -80,29 +103,28 @@ def importar_sped_para_excel(uploaded_file):
         linhas = uploaded_file.read().decode('latin1').splitlines()
 
     registros = {}
-
     for linha in linhas:
         partes = linha.strip().split("|")
-        if len(partes) > 1 and partes[1] != "":
+        if len(partes) > 1 and partes[1]:
             reg = partes[1]
             if reg not in registros:
                 registros[reg] = []
-            registros[reg].append(partes[1:-1])  # Remove o primeiro "" e o último ""
+            registros[reg].append(partes[1:-1])  # remove o primeiro e o último campo vazio
 
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        for reg in dict_cabecalhos:  # Agora percorre todos os registros do dicionário
+        for reg in dict_cabecalhos:
+            if not exportar_todos and reg not in registros:
+                continue
+
             colunas = dict_cabecalhos[reg]
-            linhas_reg = registros.get(reg, [])  # Se não houver dados, retorna lista vazia
+            linhas_reg = registros.get(reg, [])
 
             df_reg = pd.DataFrame(linhas_reg)
 
-            # Adiciona colunas vazias se necessário
             if df_reg.shape[1] < len(colunas):
                 for _ in range(len(colunas) - df_reg.shape[1]):
                     df_reg[df_reg.shape[1]] = None
-
-            # Corta colunas a mais se houver
             df_reg = df_reg.iloc[:, :len(colunas)]
             df_reg.columns = colunas
 
@@ -110,3 +132,16 @@ def importar_sped_para_excel(uploaded_file):
 
     output.seek(0)
     return output
+
+
+# Processamento e botão de download
+if uploaded_file:
+    excel_file = importar_sped_para_excel(uploaded_file, exportar_todos)
+
+    st.success("✅ Arquivo processado com sucesso!")
+    st.download_button(
+        label="📤 Baixar Excel Gerado",
+        data=excel_file,
+        file_name="sped_convertido.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
