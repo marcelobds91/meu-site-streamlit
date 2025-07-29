@@ -6,8 +6,8 @@ from relatorios.relatorio_conferencia_xml_txt import relatorio_conferencia_xml_t
 from relatorios.relatorio_xml_para_excel import relatorio_xml_para_excel
 from excel_para_txt import funcao_excel_para_txt
 from downloads_page import area_de_downloads
-
-
+from alterar_tipos_itens import alterar_tipo_item_por_cfop
+ 
 st.set_page_config(page_title="Automações Fiscais", layout="centered")
 
 menu = st.sidebar.selectbox("Menu", ["🏠 Início", "📂 Importar SPED", "📤 Excel para TXT", "📊 Relatórios", "📁 Downloads"])
@@ -82,16 +82,20 @@ elif menu == "📊 Relatórios":
     relatorio_selecionado = st.selectbox("Selecione o relatório para visualizar:", [
         "📌 Relatório Tipo Item",
         "🔍 Conferência SPED x XML",
-        "🧾 Conversor XML para Excel"
+        "🧾 Conversor XML para Excel",
+        "🧩 Alterar Tipo Item por CFOP"
     ])
 
     if relatorio_selecionado:
-        if "Tipo Item" in relatorio_selecionado:
+        if "Tipo Item" in relatorio_selecionado and "CFOP" not in relatorio_selecionado:
             relatorio_tipo_item()
         elif "SPED x XML" in relatorio_selecionado:
             relatorio_conferencia_xml_txt()
         elif "Conversor XML" in relatorio_selecionado:
             relatorio_xml_para_excel()
+        elif "Tipo Item por CFOP" in relatorio_selecionado:
+            alterar_tipo_item_por_cfop()
+
 
 elif menu == "📁 Downloads":
     area_de_downloads()
